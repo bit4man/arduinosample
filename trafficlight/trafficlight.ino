@@ -20,7 +20,7 @@
 /* 
  *  A light state represents what state a light shows. Nummerically we force the start to 0 (this should be the default)
  */
-enum lightState { RED=0, GREEN=1, YELLOW=2 };
+enum lightState { RED=0, GREEN=1, REDYELLOW=2, YELLOW=3 };
 
 /* 
  *  A traffic light is 3 LEDs, one red, one yellow and one green. The state indicates the current state of the light
@@ -33,7 +33,7 @@ struct Light {
 };
 
 /* We have 2 lights for our simple traffic light */
-Light light1 = { D8, D9, D10, RED };
+Light light1 = { D10, D9, D8, RED };
 Light light2 = { D11, D12, D13, RED };
 
 /* Initialize a single light's output pins */
@@ -75,11 +75,16 @@ void setLight(Light light, lightState state) {
                   digitalWrite(light.green, HIGH);
                   break;
     }
+    case REDYELLOW: { digitalWrite(light.red, HIGH);
+                  digitalWrite(light.yellow, HIGH);
+                  digitalWrite(light.green, LOW);
+                  break;
+    }
   }
 }
 
 /* "global" states possible for all traffic lights */
-enum TrafficLightState{ALL_RED, RED_GREEN, RED_YELLOW, GREEN_RED, GREEN_YELLOW};
+enum TrafficLightState{ALL_RED, RED_REDYELLOW, RED_GREEN, RED_YELLOW, REDYELLOW_RED, GREEN_RED, GREEN_YELLOW};
 
 /* A mode consists of a state and a delay in micro-seconds that the state should be held */
 struct TrafficModeType {
@@ -88,23 +93,25 @@ struct TrafficModeType {
 };
 
 /* A sequence list of the traffice modes */
-const TrafficModeType trafficModes[] = { { ALL_RED, 300}, { RED_GREEN, 2000 }, { RED_YELLOW, 300 }, { ALL_RED, 300 }, { GREEN_RED, 2000}, {GREEN_YELLOW, 300} };
+const TrafficModeType trafficModes[] = { { ALL_RED, 800}, {RED_REDYELLOW, 300}, { RED_GREEN, 2000 }, { RED_YELLOW, 300 }, { ALL_RED, 800 }, {REDYELLOW_RED, 300},  { GREEN_RED, 2000}, {GREEN_YELLOW, 300} };
 int trafficMode = 0;
 
 /* Set the lights to reflect the set state */
 void setLightState(int mode) {
   switch (trafficModes[mode].state) {
-    case ALL_RED:      { setLight(light1, RED); setLight(light2, RED); break; }
-    case RED_GREEN:    { setLight(light1, RED); setLight(light2, GREEN); break; }
-    case RED_YELLOW:   { setLight(light1, RED); setLight(light2, YELLOW); break; }
-    case GREEN_RED:    { setLight(light1, GREEN); setLight(light2, RED); break; }
-    case GREEN_YELLOW: { setLight(light1, YELLOW); setLight(light2, RED); break; }
+    case ALL_RED:       { setLight(light1, RED); setLight(light2, RED); break; }
+    case RED_REDYELLOW: { setLight(light1, RED); setLight(light2, REDYELLOW); break; }
+    case RED_GREEN:     { setLight(light1, RED); setLight(light2, GREEN); break; }
+    case RED_YELLOW:    { setLight(light1, RED); setLight(light2, YELLOW); break; }
+    case REDYELLOW_RED:  { setLight(light1, REDYELLOW); setLight(light2, RED); break; }
+    case GREEN_RED:     { setLight(light1, GREEN); setLight(light2, RED); break; }
+    case GREEN_YELLOW:  { setLight(light1, YELLOW); setLight(light2, RED); break; }
   };  
 }
 
 /* Force current traffic state. Used by the pedestian button */
 int newState(int newState) {
-  for (int i=0; i<=6; i++) {
+  for (int i=0; i<=8; i++) {
     if (trafficModes[i].state == newState) {
       trafficMode = i; // Set the mode to the location where we found things
       setLightState(trafficMode);
@@ -119,7 +126,7 @@ int newState(int newState) {
 /* Timer called function to change/advance the light state */
 void changeLightState()  {
   Serial.println(trafficMode);
-  if (trafficMode >= 6) trafficMode=0;
+  if (trafficMode >= 8) trafficMode=0;
   Timer1.setPeriod(trafficModes[trafficMode].delay*2000l);
   Timer1.attachInterrupt(changeLightState);
   setLightState(trafficMode++);
