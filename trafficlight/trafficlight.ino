@@ -24,7 +24,8 @@ struct Light {
   lightState state;
 };
 
-Light light1, light2;
+Light light1 = { D8, D9, D10, RED };
+Light light2 = { D11, D12, D13, RED };
 
 void setupLight(Light l) {
   pinMode(l.red, OUTPUT);
@@ -33,16 +34,6 @@ void setupLight(Light l) {
 }
 
 void setup() {
-  // put your setup code here, to run once:
-  light1.state = RED;
-  light1.green = D8;
-  light1.yellow = D9;
-  light1.red = D10;
-
-  light2.state = RED;
-  light2.green = D13;
-  light2.yellow = D12;
-  light2.red  = D11;
   setupLight(light1);
   setupLight(light2);
 
@@ -122,4 +113,6 @@ void loop() {
     Serial.println("Button Pushed");
     newState(GREEN_RED);
   }
+  int test;
+  if (test=(5+8) > 10) {} 
 }
